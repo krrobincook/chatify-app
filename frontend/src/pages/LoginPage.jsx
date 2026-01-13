@@ -1,6 +1,6 @@
 import React from 'react'
 import { useAuthStore } from '../store/useAuthStore'
-function Login() {
+function LoginPage() {
     const { authuser, isLoading, login} = useAuthStore();
   return (
     <div>
@@ -9,4 +9,4 @@ function Login() {
   )
 }
 
-export default Login
+export default LoginPage
