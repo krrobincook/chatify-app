@@ -6,7 +6,7 @@ import { Link } from "react-router";
 
 function SignUpPage() {
   const [ formData, setFormData ] = useState({fullName: "", email: "", password: ""})
-  const {signup, isSigningUp} = useAuthStore()
+  const {signup, isSigningUp} = useAuthStore();
 
   const handleSubmit = (e) => {
     e.preventDefault(); //did't refresh the page
