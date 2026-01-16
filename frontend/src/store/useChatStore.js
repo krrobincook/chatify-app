@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { getAllContacts } from "../../../backend/src/controller/message.controller";
+import { getAllContacts, getMessageByUserId } from "../../../backend/src/controller/message.controller";
 import axios from "axios";
 import { axiosInstance } from "../lib/axios";
 import toast from "react-hot-toast";
@@ -45,4 +45,16 @@ export const useChatStore = create((set, get) => ({
             set( {isUsersLoading: false} )
         }
     },
+
+    getMessageByUserId: async (userId) => {
+        set( { isMessagesLoading: true });
+        try {
+            const res = await axiosInstance.get(`/messages/${userId}`);
+            set( {messages: res.data} );
+        } catch (error){
+            toast.error(error.response?.data?.messages || "Something went wrong");
+        } finally {
+            set( { isMessagesLoading: false });
+        }
+    }
 }))

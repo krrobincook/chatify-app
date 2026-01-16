@@ -5,7 +5,7 @@ import { useAuthStore } from "../store/useAuthStore";
 
 function ContactList() {
   const { getAllContacts, allContacts, setSelectedUser, isUsersLoading } = useChatStore();
-  const { onlineUsers } = useAuthStore();
+  const { onlineUsers = [] } = useAuthStore(); 
 
   useEffect(() => {
     getAllContacts();
