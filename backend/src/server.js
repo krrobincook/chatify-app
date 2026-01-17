@@ -17,6 +17,7 @@ app.use(cors({ origin: ENV.CLIENT_URL, credentials: true }))
 app.use(cookieParser());
 app.use("/api/auth", authRoutes)
 app.use("/api/messages", messageRoutes)
+app.use("/uploads", express.static("uploads"));
 
 // make ready for development
 if(ENV.NODE_ENV === 'production'){
