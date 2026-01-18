@@ -9,7 +9,7 @@ function ChatsList() {
   const { onlineUsers= [] } = useAuthStore();
 
   useEffect(() => {
-    getMyChatPartners();
+   getMyChatPartners();
   }, [getMyChatPartners]);
 
   if (isUsersLoading) return <UsersLoadingSkeleton />;
