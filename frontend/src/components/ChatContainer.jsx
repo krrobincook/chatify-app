@@ -12,6 +12,8 @@ function ChatContainer() {
     getMessagesByUserId,
     messages,
     isMessagesLoading,
+    subscribeToMessages,
+    unsubscribeFromMessages,
   } = useChatStore();
 
   const { authUser } = useAuthStore();
@@ -21,12 +23,15 @@ function ChatContainer() {
   useEffect(() => {
     if (!selectedUser?._id) return;
     getMessagesByUserId(selectedUser._id);
-  }, [selectedUser?._id, getMessagesByUserId]);
+    subscribeToMessages();
+    return() => unsubscribeFromMessages();
+  }, [selectedUser?._id, getMessagesByUserId, subscribeToMessages, unsubscribeFromMessages]);
 
   // Auto-scroll to latest message
   useEffect(() => {
     messageEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
 
   // If no user selected yet
   if (!selectedUser) {
