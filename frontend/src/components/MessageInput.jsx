@@ -1,6 +1,7 @@
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import useKeyboardSound from "../hooks/useKeyboardSound";
 import { useChatStore } from "../store/useChatStore";
+import { useAuthStore } from "../store/useAuthStore";
 import toast from "react-hot-toast";
 import { ImageIcon, SendIcon, XIcon } from "lucide-react";
 
@@ -12,7 +13,9 @@ function MessageInput() {
 
   const fileInputRef = useRef(null);
 
-  const { sendMessage, isSoundEnabled } = useChatStore();
+  const { sendMessage, isSoundEnabled, isTyping } = useChatStore();
+  const { socket } = useAuthStore();
+  const typingTimeoutRef = useRef(null);
 
   const handleSendMessage = (e) => {
     e.preventDefault();
@@ -21,13 +24,47 @@ function MessageInput() {
 
     sendMessage({
       text: text.trim(),
-      image: selectedFile || imagePreview, // Pass file if available (for upload), or preview (fallback)
+      image: selectedFile || imagePreview,
     });
     setText("");
     setImagePreview(null);
     setSelectedFile(null);
     if (fileInputRef.current) fileInputRef.current.value = "";
+
+    // Stop typing immediately on send
+    if (socket) {
+      socket.emit("stopTyping", { receiverId: useChatStore.getState().selectedUser._id });
+    }
+
+    // Clear timeout ref so next typing triggers a new event
+    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+    typingTimeoutRef.current = null;
   };
+
+  const handleTyping = (e) => {
+    setText(e.target.value);
+    isSoundEnabled && playRandomKeyStrokeSound();
+
+    const { selectedUser } = useChatStore.getState();
+    if (!selectedUser || !socket) return;
+
+    if (!typingTimeoutRef.current) {
+      socket.emit("typing", { receiverId: selectedUser._id });
+    }
+
+    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+
+    typingTimeoutRef.current = setTimeout(() => {
+      socket.emit("stopTyping", { receiverId: selectedUser._id });
+      typingTimeoutRef.current = null; // Reset ref so next typing triggers "typing" event
+    }, 2000);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+    }
+  }, []);
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
@@ -74,10 +111,7 @@ function MessageInput() {
         <input
           type="text"
           value={text}
-          onChange={(e) => {
-            setText(e.target.value);
-            isSoundEnabled && playRandomKeyStrokeSound();
-          }}
+          onChange={handleTyping}
           className="flex-1 bg-slate-800/50 border border-slate-700/50 rounded-lg py-2 px-4"
           placeholder="Type your message..."
         />

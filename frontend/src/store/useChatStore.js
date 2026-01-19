@@ -12,6 +12,7 @@ export const useChatStore = create((set, get) => ({
   isUsersLoading: false,
   isMessagesLoading: false,
   isSoundEnabled: JSON.parse(localStorage.getItem("isSoundEnabled")) === true,
+  isTyping: false, // New State
 
   toggleSound: () => {
     localStorage.setItem("isSoundEnabled", !get().isSoundEnabled);
@@ -51,6 +52,33 @@ export const useChatStore = create((set, get) => ({
       set({ messages: res.data });
     } catch (error) {
       toast.error(error.response?.data?.message || "Something went wrong");
+    } finally {
+      set({ isMessagesLoading: false });
+    }
+  },
+
+  // Delete message functionality
+  deleteMessage: async (messageId) => {
+    try {
+      await axiosInstance.delete(`/messages/${messageId}`);
+      set((state) => ({
+        messages: state.messages.filter((m) => m._id !== messageId)
+      }));
+      toast.success("Message deleted");
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Error deleting message");
+    }
+  },
+
+  // Delete entire chat
+  deleteChat: async (userId) => {
+    set({ isMessagesLoading: true });
+    try {
+      await axiosInstance.delete(`/messages/chat/${userId}`);
+      set({ messages: [] });
+      toast.success("Chat deleted successfully");
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Error deleting chat");
     } finally {
       set({ isMessagesLoading: false });
     }
@@ -120,22 +148,23 @@ export const useChatStore = create((set, get) => ({
     const socket = useAuthStore.getState().socket;
     if (!socket) return;
 
+    // Clean up old listeners
     socket.off("newMessage");
+    socket.off("typing");
+    socket.off("stopTyping");
+    socket.off("messageDeleted");
 
     socket.on("newMessage", (newMessage) => {
       const { selectedUser, isSoundEnabled } = get();
       if (!selectedUser) return;
-
       const isMessageSentFromSelectedUser = newMessage.senderId === selectedUser._id;
       if (!isMessageSentFromSelectedUser) return;
-
       set((state) => {
         if (state.messages.some((m) => m._id === newMessage._id)) {
           return state;
         }
         return { messages: [...state.messages, newMessage] };
       });
-
       if (isSoundEnabled) {
         try {
           const notificationSound = new Audio("/sounds/notification.mp3");
@@ -145,10 +174,35 @@ export const useChatStore = create((set, get) => ({
         }
       }
     });
+
+    // Handle Typing Events
+    socket.on("typing", ({ senderId }) => {
+      const { selectedUser } = get();
+      if (selectedUser && selectedUser._id === senderId) {
+        set({ isTyping: true });
+      }
+    });
+
+    socket.on("stopTyping", ({ senderId }) => {
+      const { selectedUser } = get();
+      if (selectedUser && selectedUser._id === senderId) {
+        set({ isTyping: false });
+      }
+    });
+
+    // Handle Delete Event
+    socket.on("messageDeleted", ({ messageId }) => {
+      set((state) => ({
+        messages: state.messages.filter((m) => m._id !== messageId)
+      }));
+    });
   },
 
   unsubscribeFromMessages: () => {
     const socket = useAuthStore.getState().socket;
     socket?.off("newMessage");
+    socket?.off("typing");
+    socket?.off("stopTyping");
+    socket?.off("messageDeleted");
   },
 }));

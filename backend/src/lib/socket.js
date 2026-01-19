@@ -1,4 +1,4 @@
-import {Server} from "socket.io";
+import { Server } from "socket.io";
 import http from "http";
 import express from "express";
 import { ENV } from "./env.js";
@@ -17,7 +17,7 @@ const io = new Server(server, {
 io.use(socketAuthMiddleware);
 
 // use this function to check if the user is online or not
-export function getReceiverSocketId(userId){
+export function getReceiverSocketId(userId) {
     return userSocketMap[userId];
 }
 
@@ -33,10 +33,25 @@ io.on("connection", (socket) => {
     //io.emit used to send event to all connected clients
     io.emit("getOnlineUsers", Object.keys(userSocketMap));
 
+    // Typing events
+    socket.on("typing", (data) => {
+        const receiverSocketId = getReceiverSocketId(data.receiverId);
+        if (receiverSocketId) {
+            io.to(receiverSocketId).emit("typing", { senderId: userId });
+        }
+    });
+
+    socket.on("stopTyping", (data) => {
+        const receiverSocketId = getReceiverSocketId(data.receiverId);
+        if (receiverSocketId) {
+            io.to(receiverSocketId).emit("stopTyping", { senderId: userId });
+        }
+    });
+
     socket.on("disconnect", () => {
         console.log("A user disconnected", socket.user.fullName);
         delete userSocketMap[userId];
         io.emit("getOnlineUsers", Object.keys(userSocketMap));
     });
 });
-export {io, app, server}
+export { io, app, server }

@@ -70,7 +70,11 @@ function ProfileHeader() {
           {/* LOGOUT BTN */}
           <button
             className="text-slate-400 hover:text-slate-200 transition-colors"
-            onClick={logout}
+            onClick={() => {
+              if (window.confirm("Are you sure to log out?")) {
+                logout();
+              }
+            }}
           >
             <LogOutIcon className="size-5" />
           </button>

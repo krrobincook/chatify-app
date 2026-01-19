@@ -75,7 +75,7 @@ export const sendMessage = async (req, res) => {
     await newMessage.save();
 
     const receiverSocketId = getReceiverSocketId(receiverId);
-    if(receiverSocketId){
+    if (receiverSocketId) {
       io.to(receiverSocketId).emit("newMessage", newMessage);
     }
 
@@ -111,5 +111,54 @@ export const getChatPartners = async (req, res) => {
   } catch (error) {
     console.log("Error in getChatPartners: ", error.message);
     res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+export const deleteMessage = async (req, res) => {
+  try {
+    const { id: messageId } = req.params;
+    const senderId = req.user._id;
+
+    const message = await Message.findById(messageId);
+    if (!message) {
+      return res.status(404).json({ message: "Message not found" });
+    }
+
+    // Only sender can delete their message
+    if (message.senderId.toString() !== senderId.toString()) {
+      return res.status(403).json({ message: "Not authorized to delete this message" });
+    }
+
+    await Message.findByIdAndDelete(messageId);
+
+    // Notify receiver to delete message from their UI
+    const receiverSocketId = getReceiverSocketId(message.receiverId);
+    if (receiverSocketId) {
+      io.to(receiverSocketId).emit("messageDeleted", { messageId });
+    }
+
+    res.status(200).json({ message: "Message deleted successfully" });
+  } catch (error) {
+    console.log("Error in deleteMessage:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+export const deleteChat = async (req, res) => {
+  try {
+    const { id: otherUserId } = req.params;
+    const myId = req.user._id;
+
+    await Message.deleteMany({
+      $or: [
+        { senderId: myId, receiverId: otherUserId },
+        { senderId: otherUserId, receiverId: myId },
+      ],
+    });
+
+    res.status(200).json({ message: "Chat deleted successfully" });
+  } catch (error) {
+    console.log("Error in deleteChat:", error);
+    res.status(500).json({ message: "Internal server error" });
   }
 };
