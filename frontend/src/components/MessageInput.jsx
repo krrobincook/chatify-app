@@ -8,54 +8,49 @@ function MessageInput() {
   const { playRandomKeyStrokeSound } = useKeyboardSound();
   const [text, setText] = useState("");
   const [imagePreview, setImagePreview] = useState(null);
+  const [selectedFile, setSelectedFile] = useState(null); // RAW FILE OBJECT
+
   const fileInputRef = useRef(null);
 
-
-  const { sendMessage, isSoundEnabled, selectedUser } = useChatStore();
-  console.log("selectedUser:", selectedUser);
-
+  const { sendMessage, isSoundEnabled } = useChatStore();
 
   const handleSendMessage = (e) => {
     e.preventDefault();
     if (!text.trim() && !imagePreview) return;
-
     if (isSoundEnabled) playRandomKeyStrokeSound();
 
-    const formData = new FormData();
-    formData.append("text", text.trim());
-
-    if (fileInputRef.current?.files[0]) {
-    formData.append("image", fileInputRef.current.files[0]);
-    }
-    
-    sendMessage(formData);
-
+    sendMessage({
+      text: text.trim(),
+      image: selectedFile || imagePreview, // Pass file if available (for upload), or preview (fallback)
+    });
     setText("");
     setImagePreview(null);
-    fileInputRef.current.value = "";
+    setSelectedFile(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   const handleImageChange = (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
+    const file = e.target.files[0];
     if (!file.type.startsWith("image/")) {
       toast.error("Please select an image file");
       return;
     }
 
+    setSelectedFile(file); // Store raw file
+
     const reader = new FileReader();
-    reader.onload = () => setImagePreview(reader.result);
+    reader.onloadend = () => setImagePreview(reader.result);
     reader.readAsDataURL(file);
   };
 
   const removeImage = () => {
     setImagePreview(null);
+    setSelectedFile(null);
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   return (
-      <div className="p-4 border-t border-slate-700/50">
+    <div className="p-4 border-t border-slate-700/50">
       {imagePreview && (
         <div className="max-w-3xl mx-auto mb-3 flex items-center">
           <div className="relative">
@@ -98,9 +93,8 @@ function MessageInput() {
         <button
           type="button"
           onClick={() => fileInputRef.current?.click()}
-          className={`bg-slate-800/50 text-slate-400 hover:text-slate-200 rounded-lg px-4 transition-colors ${
-            imagePreview ? "text-cyan-500" : ""
-          }`}
+          className={`bg-slate-800/50 text-slate-400 hover:text-slate-200 rounded-lg px-4 transition-colors ${imagePreview ? "text-cyan-500" : ""
+            }`}
         >
           <ImageIcon className="w-5 h-5" />
         </button>
@@ -115,5 +109,4 @@ function MessageInput() {
     </div>
   );
 }
-
 export default MessageInput;

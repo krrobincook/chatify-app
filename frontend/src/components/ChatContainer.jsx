@@ -25,7 +25,7 @@ function ChatContainer() {
     getMessagesByUserId(selectedUser._id);
     subscribeToMessages();
     return() => unsubscribeFromMessages();
-  }, [selectedUser?._id, getMessagesByUserId, subscribeToMessages, unsubscribeFromMessages]);
+  }, [selectedUser?._id]);
 
   // Auto-scroll to latest message
   useEffect(() => {
@@ -55,7 +55,7 @@ function ChatContainer() {
         ) : messages.length > 0 ? (
           <div className="max-w-3xl mx-auto space-y-6">
             {messages.map((msg) => {
-              const isSender = msg.senderId === authUser._id;
+              const isSender = msg.senderId?.toString() === authUser._id?.toString();
 
               return (
                 <div

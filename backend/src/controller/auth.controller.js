@@ -1,6 +1,6 @@
 import User from "../models/User.js";
 import bcrypt from "bcryptjs";
-import generateToken from "../lib/utils.js";
+import { generateToken } from "../lib/utils.js";
 import {ENV} from "../lib/env.js"
 import { sendWelcomeEmail } from "../emails/emailHandler.js";
 import cloudinary from "../lib/cloudinary.js";
