@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { useAuthStore } from "../store/useAuthStore";
 import BorderAnimatedContainer from "../components/BorderAnimatedContainer";
-import { MessageCircleIcon, LockIcon, MailIcon, UserIcon, LoaderIcon } from "lucide-react";
+import { MessageCircleIcon, LockIcon, MailIcon, UserIcon, LoaderIcon, Eye, EyeOff } from "lucide-react";
 import { Link } from "react-router";
 
 function SignUpPage() {
-  const [ formData, setFormData ] = useState({fullName: "", email: "", password: ""})
-  const {signup, isSigningUp} = useAuthStore();
+  const [formData, setFormData] = useState({ fullName: "", email: "", password: "" })
+  const { signup, isSigningUp } = useAuthStore();
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleSubmit = (e) => {
     e.preventDefault(); //did't refresh the page
@@ -14,7 +15,7 @@ function SignUpPage() {
   };
 
   return (
-      <div className="w-full flex items-center justify-center p-4 bg-slate-900">
+    <div className="w-full flex items-center justify-center p-4 bg-slate-900">
       <div className="relative w-full max-w-6xl md:h-[800px] h-[650px]">
         <BorderAnimatedContainer>
           <div className="w-full flex flex-col md:flex-row">
@@ -69,12 +70,24 @@ function SignUpPage() {
                       <LockIcon className="auth-input-icon" />
 
                       <input
-                        type="password"
+                        type={showPassword ? "text" : "password"}
                         value={formData.password}
                         onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                         className="input"
                         placeholder="Enter your password"
                       />
+
+                      <button
+                        type="button"
+                        className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                        onClick={() => setShowPassword(!showPassword)}
+                      >
+                        {showPassword ? (
+                          <EyeOff className="w-5 h-5 text-gray-400" />
+                        ) : (
+                          <Eye className="w-5 h-5 text-gray-400" />
+                        )}
+                      </button>
                     </div>
                   </div>
 
