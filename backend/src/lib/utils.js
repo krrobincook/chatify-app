@@ -7,8 +7,8 @@ export const generateToken = (userId, res) => {
 
   res.cookie("jwt", token, {
     httpOnly: true,
-    sameSite: ENV.NODE_ENV === "development" ? "lax" : "none",
-    secure: ENV.NODE_ENV !== "development",
+    sameSite: ENV.NODE_ENV !== "development" || process.env.RENDER ? "none" : "lax",
+    secure: ENV.NODE_ENV !== "development" || process.env.RENDER,
     maxAge: 7 * 24 * 60 * 60 * 1000,
   });
 
