@@ -22,7 +22,7 @@ router.post(
     sendMessage
 );
 
-deleteMessage
+router.delete("/:id", deleteMessage);
 
 router.delete("/chat/:id", protectRoute, deleteChat);
 
