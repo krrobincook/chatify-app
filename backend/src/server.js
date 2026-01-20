@@ -33,6 +33,8 @@ if (ENV.NODE_ENV === 'production') {
 }
 
 server.listen(PORT, () => {
-    console.log("Server running at port: " + PORT)
+    console.log("Server running at port: " + PORT);
+    console.log("Environment:", ENV.NODE_ENV);
+    console.log("Allowed Client:", ENV.CLIENT_URL);
     connectDB();
 })
