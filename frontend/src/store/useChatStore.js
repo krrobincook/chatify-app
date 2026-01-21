@@ -20,7 +20,25 @@ export const useChatStore = create((set, get) => ({
   },
 
   setActiveTab: (tab) => set({ activeTab: tab }),
-  setSelectedUser: (selectedUser) => set({ selectedUser }),
+  setSelectedUser: (selectedUser) => {
+    const { authUser } = useAuthStore.getState();
+    if (selectedUser && authUser && selectedUser._id === authUser._id) {
+      toast.error("You cannot chat with yourself");
+      return;
+    }
+    set({ selectedUser });
+  },
+
+  reset: () => set({
+    selectedUser: null,
+    messages: [],
+    chats: [],
+    allContacts: [],
+    activeTab: "chats",
+    isUsersLoading: false,
+    isMessagesLoading: false,
+    isTyping: false,
+  }),
 
   getAllContacts: async () => {
     set({ isUsersLoading: true });

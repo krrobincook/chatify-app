@@ -51,7 +51,7 @@ export const sendMessage = async (req, res) => {
       console.log(`Blocked attempt to send message to self. Sender: ${senderId}, Receiver: ${receiverId}`);
       return res
         .status(400)
-        .json({ message: `Cannot send message to yourself. Debug: Sender=${senderId} Receiver=${receiverId}` });
+        .json({ message: "Cannot send message to yourself." });
     }
 
     const receiverExists = await User.exists({ _id: receiverId });
