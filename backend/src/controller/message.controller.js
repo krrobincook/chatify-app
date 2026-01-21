@@ -41,14 +41,17 @@ export const sendMessage = async (req, res) => {
     const { id: receiverId } = req.params;
     const senderId = req.user._id;
 
+
+
     if (!text && !req.file) {
       return res.status(400).json({ message: "Text or image is required" });
     }
 
     if (senderId.equals(receiverId)) {
+      console.log(`Blocked attempt to send message to self. Sender: ${senderId}, Receiver: ${receiverId}`);
       return res
         .status(400)
-        .json({ message: "Cannot send message to yourself." });
+        .json({ message: `Cannot send message to yourself. Debug: Sender=${senderId} Receiver=${receiverId}` });
     }
 
     const receiverExists = await User.exists({ _id: receiverId });
@@ -103,7 +106,7 @@ export const getChatPartners = async (req, res) => {
             : msg.senderId.toString()
         )
       ),
-    ];
+    ].filter(id => id !== loggedInUserId.toString());
     const chatPartners = await User.find({
       _id: { $in: chatPartnersIds },
     }).select("-password");
